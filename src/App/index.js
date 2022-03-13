@@ -1,19 +1,94 @@
-import React, { useEffect, useState } from 'react';
-import { TodoProvider } from '../TodoContext';
-import { AppUI } from './AppUI';
-
-//const defaultTodos = [
-//  { text: 'Cortar cebolla', completed: true },
-//  { text: 'Tomar el cursso de intro a React', completed: false },
-//  { text: 'Llorar con la llorona', completed: true },
-//  { text: 'LALALALAA', completed: false },
-//];
+import React from 'react';
+import { useTodos } from './useTodos';
+import { TodoHeader } from '../TodoHeader';
+import { TodoCounter } from '../TodoCounter';
+import { TodoSearch } from '../TodoSearch';
+import { TodoList } from '../TodoList';
+import { TodoItem } from '../TodoItem';
+import { TodosError } from '../TodosError';
+import { TodosLoading } from '../TodosLoading';
+import { EmptyTodos } from '../EmptyTodos';
+import { TodoForm } from '../TodoForm';
+import { CreateTodoButton } from '../CreateTodoButton';
+import { Modal } from '../Modal';
+import { ChangeAlert } from '../ChangeAlert';
 
 function App() {
+  const { state, stateUpdaters } = useTodos();
+  
+  const {
+    loading,
+    error,
+    totalTodos,
+    completedTodos,
+    searchValue,
+    searchedTodos,
+    openModal,
+  } = state;
+
+  const {
+    setSearchValue,
+    addTodo,
+    completeTodo,
+    deleteTodo,
+    setOpenModal,
+    sincronizeTodos,
+  } = stateUpdaters
+
   return (
-    <TodoProvider>
-      <AppUI />
-    </TodoProvider>
+    <React.Fragment>
+      <TodoHeader loading={loading}>
+        <TodoCounter
+          totalTodos={totalTodos}
+          completedTodos={completedTodos}
+        />
+        <TodoSearch
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+        />
+      </TodoHeader>
+
+      <TodoList
+        error={error}
+        loading={loading}
+        totalTodos={totalTodos}
+        searchedTodos={searchedTodos}
+        searchText={searchValue}
+        onError={() => <TodosError />}
+        onLoading={() => <TodosLoading />}
+        onEmptyTodos={() => <EmptyTodos />}
+        onEmptySearchResults={
+          (searchText) => <p>No hay resultados para {searchText}</p>
+        }
+      >
+        {todo => (
+          <TodoItem
+            key={todo.text}
+            text={todo.text}
+            completed={todo.completed}
+            onComplete={() => completeTodo(todo.text)}
+            onDelete={() => deleteTodo(todo.text)}
+          />
+        )}
+      </TodoList>
+
+      {!!openModal && (
+        <Modal>
+          <TodoForm
+            addTodo={addTodo}
+            setOpenModal={setOpenModal}
+          />
+        </Modal>
+      )}
+
+      <CreateTodoButton
+        setOpenModal={setOpenModal}
+      />
+
+      <ChangeAlert
+        sincronize={sincronizeTodos}
+      />
+    </React.Fragment>
   );
 }
 
